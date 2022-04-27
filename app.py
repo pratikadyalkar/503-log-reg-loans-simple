@@ -11,7 +11,8 @@ image1='assets/rocauc.html'
 tabtitle = 'Loan Prediction'
 sourceurl = 'https://datahack.analyticsvidhya.com/contest/practice-problem-loan-prediction-iii/'
 githublink = 'https://github.com/plotly-dash-apps/503-log-reg-loans-simple'
-
+titlesdict = {"Female":[1,0], "Male":[0,1]}
+areadict = {"Rural":[1,0,0], "SemiUrban":[0,1,0],"Urban":[0,0,1]}
 ########### open the json file ######
 with open('assets/rocauc.json', 'r') as f:
     fig=json.load(f)
@@ -45,6 +46,12 @@ app.layout = html.Div(children=[
                 dcc.Input(id='Loan_Amount_Term', value=360, type='number', min=120, max=480, step=10),
                 html.Div('Applicant Income (in dollars)'),
                 dcc.Input(id='ApplicantIncome', value=5000, type='number', min=0, max=100000, step=500),
+                html.Datalist(id='browse', children=[html.Option(value=word) for word in titlesdict.keys()]),
+                html.Div('Applicant Gender'),
+                dcc.Input(id='ApplicantGender', value='', type='text',list='browse'),
+                html.Datalist(id='area', children=[html.Option(value=word) for word in areadict.keys()]),
+                html.Div('Property Area'),
+                dcc.Input(id='PropertyArea', value='', type='text',list='area'),
                 html.Div('Probability Threshold for Loan Approval'),
                 dcc.Input(id='Threshold', value=50, type='number', min=0, max=100, step=1),
 
@@ -82,11 +89,14 @@ app.layout = html.Div(children=[
      Input(component_id='LoanAmount', component_property='value'),
      Input(component_id='Loan_Amount_Term', component_property='value'),
      Input(component_id='ApplicantIncome', component_property='value'),
+     Input(component_id='ApplicantGender', component_property='value'),
+     Input(component_id='PropertyArea', component_property='value'),
      Input(component_id='Threshold', component_property='value')
     ])
-def prediction_function(Credit_History, LoanAmount, Loan_Amount_Term, ApplicantIncome, Threshold):
+def prediction_function(Credit_History, LoanAmount, Loan_Amount_Term, ApplicantIncome,Gender,Area, Threshold):
     try:
-        data = [[Credit_History, LoanAmount, Loan_Amount_Term, ApplicantIncome]]
+        data = [[Credit_History, LoanAmount, Loan_Amount_Term, ApplicantIncome]+titlesdict[Gender]+areadict[Area]]
+        print(data)
         rawprob=100*unpickled_model.predict_proba(data)[0][1]
         func = lambda y: 'Approved' if int(rawprob)>Threshold else 'Denied'
         formatted_y = func(rawprob)
